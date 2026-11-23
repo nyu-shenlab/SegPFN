@@ -1,8 +1,43 @@
 # SegPFN
 
-Segment an object in a query image using one or more reference images annotated for that object. SegPFN combines DINOv3-L/16 patch features and a frozen TabPFN 3.5 classifier. The output is a single-channel PNG at the original query size, with background 0 and foreground 255.
+**Training-Free In-Context Segmentation with Tabular Prior-Data Fitted Networks**
 
-## Install
+Jiajian Ma, Yihao Qiao, Ke Chen, Kaiyue Feng, Wushuang Rui, Abhishek Jha, Aarti Darji, and Yiqiu Shen<br>
+New York University · NYU Langone Health
+
+SegPFN uses one or a few annotated reference images to specify what to segment in a target image. A frozen DINOv3 encoder represents each patch as a row of visual features. Given foreground and background labels for the reference patches, a frozen TabPFN classifier predicts the target mask without segmentation-specific training.
+
+[Quick start](#quick-start) · [How it works](#how-it-works) · [Benchmark results](#benchmark-results) · [Inference guide](docs/inference.md)
+
+![Reference and target images for three dog segmentation tasks, the predicted masks, and a radar plot comparing training-free methods.](docs/figures/segpfn-overview.png)
+
+**Figure 1.** The reference annotation sets the scope of the task. It can ask for all dogs in a scene (semantic segmentation), a dog's face (part segmentation), or one particular puppy (personalized segmentation).
+
+## How it works
+
+![Reference masks label patch features, a frozen tabular network predicts target patch probabilities, and refinement produces a binary mask.](docs/figures/segpfn-method.png)
+
+**Figure 2.** In this example, the reference masks mark the cat as foreground. The yellow outline on the final image shows the ground-truth boundary.
+
+1. **Build the reference context.** A frozen DINOv3-L/16 encoder extracts patch features from every image. PCA fitted on the reference patches projects both reference and target features into the same space. The reference masks label sampled patches as foreground or background.
+2. **Predict target patches.** A frozen TabPFN 3.5 classifier estimates a foreground probability for each target patch. With multiple references, labeled patches from all of them form a shared context.
+3. **Refine the mask.** Cluster smoothing and reference-guided correction adjust the patch scores. A dense conditional random field (CRF) then refines the mask boundary.
+
+## Benchmark results
+
+Across 11 datasets, SegPFN achieves **60.32% overall mean intersection-over-union (mIoU)**, **4.70 points** above FROST (55.62%), the strongest overall baseline. SegPFN leads in four of the five evaluated task and shot settings.
+
+| Task | Datasets | 1-shot mIoU (%) | 5-shot mIoU (%) |
+| --- | --- | ---: | ---: |
+| Semantic | COCO-20ⁱ, LVIS-92ⁱ, ISIC, Lung, iSAID, SUIM | 60.12 | **69.22** |
+| Part | PASCAL-Part, PACO-Part | **51.97** | **62.32** |
+| Personalized | PerMIS, CUHK-SYSU-ICS, DAVIS-2017-ICS | **59.13** | — |
+
+Tables 1–3 of the paper give the per-dataset comparisons. Bold marks the best eligible average for each setting. Datasets have equal weight within each task. Overall mIoU gives equal weight to the three tasks after averaging the two shot settings for semantic and part segmentation. Personalized segmentation was evaluated with one reference.
+
+## Quick start
+
+### Install
 
 Use Linux, Python 3.12, an NVIDIA GPU, a C++ compiler, and a CUDA toolkit matching your PyTorch build. The following commands use the CUDA 13.0 build. Run the CRF build on the target GPU or set `TORCH_CUDA_ARCH_LIST` to its compute capability.
 
@@ -19,7 +54,7 @@ python scripts/install_crf.py
 
 The CRF installer verifies the pinned upstream archive and builds its filtering extension against the active PyTorch installation. If `nvcc` is outside the default search path, set `CUDA_HOME` to the toolkit directory. For offline installation, pass the pinned zip to `scripts/install_crf.py --archive FILE`. [Dense CRF source](https://github.com/netw0rkf10w/CRF/tree/13a123f7cd3ea1f975e6c483b1e7c52112d7c151)
 
-## Get the checkpoints
+### Get the checkpoints
 
 Obtain access to both model repositories through your Hugging Face account, then download the following revisions. The predictor checks the file hashes once at startup. Use `--weights DIR` if the downloads are outside `weights/`, keeping the same directory layout. [DINOv3-L/16](https://huggingface.co/facebook/dinov3-vitl16-pretrain-lvd1689m) · [TabPFN 3.5](https://huggingface.co/Prior-Labs/tabpfn_3_5)
 
@@ -31,62 +66,20 @@ hf download Prior-Labs/tabpfn_3_5 tabpfn-v3.5-20260909.safetensors \
   --revision 06bf2ba35c80a92a3b9abb436b99cf49e7a0365e --local-dir weights
 ```
 
-## Predict
+### Predict
 
-The three small input images below are included in the checkout.
+Run the example with the target image, reference image, and reference mask included in the checkout.
 
 ```bash
 segpfn --query examples/query.png --reference examples/reference.png examples/reference-mask.png \
   --output outputs/mask.png
 ```
 
-| `--mode` | Cluster smoothing | Reference-guided refinement | Boundary CRF |
-| --- | --- | --- | --- |
-| `full` (default) | On | On | On |
-| `no-refinement` | On | Off | On |
-| `crf-only` | Off | Off | On |
-
-Select a single mode per prediction. All three use query min–max normalization, a 0.5 threshold and the same boundary CRF. Disabled stages are skipped.
-
-```bash
-segpfn --query examples/query.png --reference examples/reference.png examples/reference-mask.png \
-  --mode no-refinement --output outputs/no-refinement.png
-segpfn --query examples/query.png --reference examples/reference.png examples/reference-mask.png \
-  --mode crf-only --output outputs/crf-only.png
-```
-
-Repeat `--reference IMAGE MASK` for multi-shot inference, in the original reference order. Masks may use 0/1 or 0/255. For indexed masks, supply the target class with `--foreground-value`. For example, `--foreground-value 1 --ignore-value 255` selects label 1 and excludes void pixels. Use single-channel or palette-indexed masks registered to the reference image. A mask on a different-sized grid is resized to that image using nearest-neighbor interpolation.
-
-The same interface is available with `python -m segpfn`. In Python, reuse a model across queries.
-
-```python
-from PIL import Image
-from segpfn.model import SegPFN
-
-model = SegPFN("weights")
-with Image.open("examples/query.png") as query, Image.open("examples/reference.png") as ref, \
-     Image.open("examples/reference-mask.png") as mask:
-    prediction = model.predict(query, [(ref, mask)])  # bool array, (height, width)
-```
+The command writes `outputs/mask.png` at the target image's original size, with foreground pixels set to 255 and background pixels to 0. For multiple references, repeat `--reference IMAGE MASK` once per pair. The same command is available through `python -m segpfn`.
 
 ## Reproducing a prediction
 
-* RGB images are resized along the long edge to 1024 and centered on an ImageNet-mean canvas. At least half of a 16 × 16 patch must be valid. For support patches, at least half the valid pixels must belong to the target for the patch to count as foreground.
-* One-shot inference retains the original reference. A foreground fraction strictly between 0 and 5% adds two weak color views. Otherwise four color/geometry views protect the foreground bounding box, connected components, pixel count and foreground patch count. Multiple references use their original views and append RGB and XY patch columns.
-* Raw and position-debiased branches fit separate full-SVD PCAs on original support rows. Each retains 128 of up to 192 components. Each branch uses two deterministically sampled TabPFN contexts of up to 1,024 rows. The two branch probabilities are averaged equally.
-* Cluster smoothing mixes each patch probability with its cluster mean in equal proportions. Average linkage uses cosine distance 0.4 (similarity 0.6). Reference-guided refinement computes a FoRIS seed and bounds its effect using class-matching evidence calibrated on held-out support blocks. The maximum change to the normalized patch score is 0.25. When the reference supplies no usable calibration fold, the baseline score passes through.
-* Valid patch scores extend into padding by nearest valid patch, then resize bilinearly to the canvas. A ten-iteration Frank–Wolfe dense CRF refines the thresholded boundary. The final mask is cropped to the image region, resized bilinearly and thresholded at 0.5.
-
-Sampling uses seed 17. By default the episode identifier derives from the input pixels, the reference mask contents and reference order. Pass `--episode-id ID` to replay a recorded episode with its original sampling identity.
-
-The reference runtime uses an A100, Python 3.12.4, FP32, and the package versions in `pyproject.toml`. The predictor disables TF32. To match the reference process settings, export these variables before starting Python. The reference x86 hosts also used `OPENBLAS_CORETYPE=SkylakeX`. Use that override only on a CPU supporting its instruction set. Hardware and numerical library changes can affect borderline pixels.
-
-```bash
-export OMP_NUM_THREADS=4 OPENBLAS_NUM_THREADS=4 MKL_NUM_THREADS=4
-export CUBLAS_WORKSPACE_CONFIG=:4096:8
-```
-
-To check the installation, run `python -m pip install '.[test]'` followed by `python -m pytest -q`. Geometry, mask decoding, context sampling and score tests run on CPU. The three image-to-mask tests also run when CUDA and the `weights/` directory are available. Set `SEGPFN_TEST_WEIGHTS` to test another checkpoint directory.
+The inference guide covers indexed masks, refinement modes, and how to reuse a loaded model across queries. It also documents the patch sampling, runtime settings, and tests used to reproduce a prediction. [Masks and modes](docs/inference.md#reference-masks-and-refinement-modes) · [Python API](docs/inference.md#python-api) · [Reproducibility](docs/inference.md#reproducing-a-prediction)
 
 ## Upstream components
 

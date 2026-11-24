@@ -1,0 +1,54 @@
+episode_id,source_split,sequence,category,instance_id,reference_frame,target_frame,same_category_distractor_ids
+davis2017-boxing-fisheye-id01,train,boxing-fisheye,person,1,00009,00071,2 3
+davis2017-boxing-fisheye-id02,train,boxing-fisheye,person,2,00009,00071,1 3
+davis2017-boxing-fisheye-id03,train,boxing-fisheye,person,3,00009,00071,1 2
+davis2017-classic-car-id01,train,classic-car,person,1,00032,00057,2
+davis2017-classic-car-id02,train,classic-car,person,2,00032,00057,1
+davis2017-crossing-id01,train,crossing,person,1,00000,00051,2
+davis2017-crossing-id02,train,crossing,person,2,00000,00051,1
+davis2017-dancing-id01,train,dancing,person,1,00009,00061,2 3
+davis2017-dancing-id02,train,dancing,person,2,00009,00061,1 3
+davis2017-dancing-id03,train,dancing,person,3,00009,00061,1 2
+davis2017-dog-gooses-id02,train,dog-gooses,bird,2,00014,00055,3 4 5
+davis2017-dog-gooses-id03,train,dog-gooses,bird,3,00014,00055,2 4 5
+davis2017-dog-gooses-id04,train,dog-gooses,bird,4,00014,00055,2 3 5
+davis2017-dog-gooses-id05,train,dog-gooses,bird,5,00014,00055,2 3 4
+davis2017-dogs-jump-id01,val,dogs-jump,dog,1,00013,00039,2
+davis2017-dogs-jump-id02,val,dogs-jump,dog,2,00013,00039,1
+davis2017-dogs-scale-id01,train,dogs-scale,dog,1,00000,00043,2
+davis2017-dogs-scale-id02,train,dogs-scale,dog,2,00000,00043,1
+davis2017-drone-id02,train,drone,cellphone,2,00000,00090,4
+davis2017-drone-id04,train,drone,cellphone,4,00000,00090,2
+davis2017-gold-fish-id01,val,gold-fish,fish,1,00000,00077,2 3 4 5
+davis2017-gold-fish-id02,val,gold-fish,fish,2,00000,00077,1 3 4 5
+davis2017-gold-fish-id03,val,gold-fish,fish,3,00000,00077,1 2 4 5
+davis2017-gold-fish-id04,val,gold-fish,fish,4,00000,00077,1 2 3 5
+davis2017-gold-fish-id05,val,gold-fish,fish,5,00000,00077,1 2 3 4
+davis2017-india-id02,val,india,person,2,00005,00033,1 3
+davis2017-india-id03,val,india,person,3,00005,00033,1 2
+davis2017-judo-id01,val,judo,person,1,00000,00033,2
+davis2017-judo-id02,val,judo,person,2,00000,00033,1
+davis2017-lindy-hop-id01,train,lindy-hop,person,1,00000,00044,2 3 4 5 6 7 8
+davis2017-lindy-hop-id02,train,lindy-hop,person,2,00000,00044,1 3 4 5 6 7 8
+davis2017-lindy-hop-id03,train,lindy-hop,person,3,00000,00044,1 2 4 5 6 7 8
+davis2017-lindy-hop-id04,train,lindy-hop,person,4,00000,00044,1 2 3 5 6 7 8
+davis2017-lindy-hop-id05,train,lindy-hop,person,5,00000,00044,1 2 3 4 6 7 8
+davis2017-lindy-hop-id08,train,lindy-hop,person,8,00000,00044,1 2 3 4 5 6 7
+davis2017-loading-id01,val,loading,person,1,00000,00049,3
+davis2017-loading-id03,val,loading,person,3,00000,00049,1
+davis2017-miami-surf-id01,train,miami-surf,person,1,00009,00055,3
+davis2017-miami-surf-id03,train,miami-surf,person,3,00009,00055,1
+davis2017-motorbike-id02,train,motorbike,person,2,00014,00042,3
+davis2017-motorbike-id03,train,motorbike,person,3,00014,00042,2
+davis2017-night-race-id01,train,night-race,car,1,00004,00030,2
+davis2017-night-race-id02,train,night-race,car,2,00004,00030,1
+davis2017-pigs-id01,val,pigs,pig,1,00031,00078,2 3
+davis2017-pigs-id02,val,pigs,pig,2,00031,00078,1 3
+davis2017-pigs-id03,val,pigs,pig,3,00031,00078,1 2
+davis2017-sheep-id01,train,sheep,sheep,1,00037,00067,2 3 4 5
+davis2017-sheep-id02,train,sheep,sheep,2,00037,00067,1 3 4 5
+davis2017-soapbox-id02,val,soapbox,person,2,00069,00098,3
+davis2017-soapbox-id03,val,soapbox,person,3,00069,00098,2
+davis2017-train-id01,train,train,carriage,1,00039,00079,2 3
+davis2017-train-id02,train,train,carriage,2,00039,00079,1 3
+davis2017-train-id03,train,train,carriage,3,00039,00079,1 2

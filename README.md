@@ -7,11 +7,28 @@ New York University · NYU Langone Health
 
 SegPFN uses one or a few annotated reference images to specify what to segment in a target image. A frozen DINOv3 encoder represents each patch as a row of visual features. Given foreground and background labels for the reference patches, a frozen TabPFN classifier predicts the target mask without segmentation-specific training.
 
-[Quick start](#quick-start) · [How it works](#how-it-works) · [Benchmark results](#benchmark-results) · [Inference guide](docs/inference.md)
+[Get the datasets](#get-the-datasets) · [Run SegPFN](#quick-start) · [How it works](#how-it-works) · [Inference guide](docs/inference.md)
 
 ![Reference and target images for three dog segmentation tasks, the predicted masks, and a radar plot comparing training-free methods.](docs/figures/segpfn-overview.png)
 
-**Figure 1.** The reference annotation sets the scope of the task. It can ask for all dogs in a scene (semantic segmentation), a dog's face (part segmentation), or one particular puppy (personalized segmentation).
+**Figure 1.** The reference annotation sets the scope of the task. It can ask for all dogs in a scene (semantic segmentation), a dog's face (part segmentation), or one particular puppy (personalized segmentation). The paper evaluates these three settings across 11 datasets.
+
+## Get the datasets
+
+**DAVIS-2017-ICS** contains 53 tasks from 20 videos. Changing the reference mask selects a different instance in the same frame pair. **CUHK-SYSU-ICS** contains 151 tasks from 113 image pairs. The reference mask selects the person to find in a second image.
+
+Download the two source archives from their authors and keep them in the same folder.
+
+- **DAVIS.** Get `DAVIS-2017-trainval-480p.zip` from the semi-supervised **TrainVal** section. It contains the video frames and instance masks. [Official DAVIS download page](https://davischallenge.org/davis2017/code.html) · [TrainVal 480p ZIP](https://data.vision.ee.ethz.ch/csergi/share/davis/DAVIS-2017-trainval-480p.zip)
+- **CUHK-SYSU.** Request academic access from the dataset authors, then get `mask_images_json_sysu.zip` from the maskPS authors. Its annotation files contain the JPEGs and person polygons used in the paper. [Official CUHK-SYSU access instructions](https://github.com/ShuangLI59/person_search#experiments) · [Official maskPS download](https://github.com/Dingyuan-Zheng/maskPS#cuhk-sysu-dataset)
+
+From the SegPFN repository root, run this command with the folder containing both ZIPs.
+
+```bash
+uv run benchmarks/get_datasets.py --source-dir ~/Downloads
+```
+
+The script builds both benchmarks under `data/` and verifies every image and mask against the paper’s checksums. SegPFN distributes the task lists, checksums, and reconstruction code. [Dataset instructions and terms](benchmarks/README.md)
 
 ## How it works
 
@@ -22,18 +39,6 @@ SegPFN uses one or a few annotated reference images to specify what to segment i
 1. **Build the reference context.** A frozen DINOv3-L/16 encoder extracts patch features from every image. PCA fitted on the reference patches projects both reference and target features into the same space. The reference masks label sampled patches as foreground or background.
 2. **Predict target patches.** A frozen TabPFN 3.5 classifier estimates a foreground probability for each target patch. With multiple references, labeled patches from all of them form a shared context.
 3. **Refine the mask.** Cluster smoothing and reference-guided correction adjust the patch scores. A dense conditional random field (CRF) then refines the mask boundary.
-
-## Benchmark results
-
-Across 11 datasets, SegPFN achieves **60.32% overall mean intersection-over-union (mIoU)**, **4.70 points** above FROST (55.62%), the strongest overall baseline. SegPFN leads in four of the five evaluated task and shot settings.
-
-| Task | Datasets | 1-shot mIoU (%) | 5-shot mIoU (%) |
-| --- | --- | ---: | ---: |
-| Semantic | COCO-20ⁱ, LVIS-92ⁱ, ISIC, Lung, iSAID, SUIM | 60.12 | **69.22** |
-| Part | PASCAL-Part, PACO-Part | **51.97** | **62.32** |
-| Personalized | PerMIS, CUHK-SYSU-ICS, DAVIS-2017-ICS | **59.13** | — |
-
-Tables 1–3 of the paper give the per-dataset comparisons. Bold marks the best eligible average for each setting. Datasets have equal weight within each task. Overall mIoU gives equal weight to the three tasks after averaging the two shot settings for semantic and part segmentation. Personalized segmentation was evaluated with one reference.
 
 ## Quick start
 

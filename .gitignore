@@ -7,3 +7,6 @@ build/
 dist/
 weights/
 outputs/
+/data/
+/DAVIS-2017-trainval-480p.zip
+/mask_images_json_sysu.zip

@@ -5,6 +5,8 @@
 Jiajian Ma, Yihao Qiao, Ke Chen, Kaiyue Feng, Wushuang Rui, Abhishek Jha, Aarti Darji, and Yiqiu Shen<br>
 New York University · NYU Langone Health
 
+[arXiv:2611.32045](https://arxiv.org/abs/2611.32045) · [BibTeX](#citation)
+
 SegPFN uses one or a few annotated reference images to specify what to segment in a target image. A frozen DINOv3 encoder represents each patch as a row of visual features. Given foreground and background labels for the reference patches, a frozen TabPFN classifier predicts the target mask without segmentation-specific training.
 
 [How it works](#how-it-works) · [Run SegPFN](#quick-start) · [Get the benchmarks](#get-the-benchmarks)
@@ -93,3 +95,18 @@ The script builds both benchmarks under `data/` and verifies every image and mas
 ## Upstream components and licenses
 
 The seed construction and narrow-band CRF integration adapt FoRIS. The included 1024 × 500 positional basis was computed once from the DINOv3-L response to a constant image. Its SHA-256 is `6838d91c843bb59d72ccb458e58c82a9a7d705a60f8325fd97a876eae3fc8037` (compressed file). The corresponding license texts accompany the distribution. [FoRIS revision](https://github.com/Xi-Mu-Yu/FoRIS/tree/1aa02a11ef5f6673ed7a8a666ccf7d5586998d9e) · [FoRIS license](licenses/FoRIS-Apache-2.0.txt) · [DINOv3 license](licenses/DINOv3.txt)
+
+## Citation
+
+```bibtex
+@misc{ma2026segpfn,
+  title = {{SegPFN}: Training-Free In-Context Segmentation with Tabular Prior-Data Fitted Networks},
+  author = {Ma, Jiajian and Qiao, Yihao and Chen, Ke and Feng, Kaiyue and
+            Rui, Wushuang and Jha, Abhishek and Darji, Aarti and Shen, Yiqiu},
+  year = {2026},
+  eprint = {2611.32045},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.CV},
+  url = {https://arxiv.org/abs/2611.32045}
+}
+```
